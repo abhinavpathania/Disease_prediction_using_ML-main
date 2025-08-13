@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Disease Prediction System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            color: #7f8c8d;
+            font-size: 1.1em;
+        }
+
+        .model-info {
+            display: flex;
+            justify-content: space-around;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .info-item {
+            text-align: center;
+            margin: 5px;
+        }
+
+        .info-item .label {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .info-item .value {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .form-section {
+            margin-bottom: 30px;
+        }
+
+        .form-section h3 {
+            color: #34495e;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+
+        .symptom-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #34495e;
+        }
+
+        select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e6ed;
+            border-radius: 8px;
+            font-size: 16px;
+            background-color: white;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        select:hover {
+            border-color: #3498db;
+        }
+
+        .loading-dropdown {
+            background-color: #f8f9fa !important;
+            color: #666 !important;
+            cursor: not-allowed !important;
+        }
+
+        .predict-btn {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: 600;
+            width: 100%;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .predict-btn:hover:not(:disabled) {
+            background: linear-gradient(135deg, #2980b9, #1f5f99);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(52, 152, 219, 0.3);
+        }
+
+        .predict-btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+            color: #666;
+        }
+
+        .loading::after {
+            content: "";
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #3498db;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .result {
+            margin-top: 30px;
+            padding: 25px;
+            border-radius: 15px;
+            display: none;
+            animation: slideIn 0.5s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result.success {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            color: white;
+        }
+
+        .result.error {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+        }
+
+        .result h3 {
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .prediction-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .detail-item {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .detail-label {
+            font-size: 0.9em;
+            opacity: 0.8;
+            margin-bottom: 5px;
+        }
+
+        .detail-value {
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        .top-predictions {
+            margin-top: 20px;
+        }
+
+        .top-predictions h4 {
+            margin-bottom: 15px;
+            opacity: 0.9;
+        }
+
+        .prediction-item {
+            background: rgba(255,255,255,0.1);
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .warning {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            color: white;
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 15px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .warning strong {
+            font-size: 16px;
+        }
+
+        .info-section {
+            background: #e3f2fd;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            border-left: 5px solid #3498db;
+        }
+
+        .info-section h4 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .info-section p {
+            color: #555;
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        .dropdown-status {
+            text-align: center;
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .dropdown-status.loading {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .dropdown-status.loaded {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .dropdown-status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .model-info {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .symptom-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .prediction-details {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏥 AI Disease Prediction System</h1>
+            <p>Advanced machine learning-powered symptom analysis for preliminary health insights</p>
+        </div>
+
+        {% if accuracy != "N/A" %}
+        <div class="model-info">
+            <div class="info-item">
+                <div class="label">Model Type</div>
+                <div class="value">{{ model_type }}</div>
+            </div>
+            <div class="info-item">
+                <div class="label">Accuracy</div>
+                <div class="value">{{ accuracy }}</div>
+            </div>
+            <div class="info-item">
+                <div class="label">Cross-Validation</div>
+                <div class="value">{{ cross_val_accuracy }}</div>
+            </div>
+            {% if total_diseases %}
+            <div class="info-item">
+                <div class="label">Known Diseases</div>
+                <div class="value">{{ total_diseases }}</div>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <div class="info-section">
+            <h4>📋 How to Use</h4>
+            <p>Select the most appropriate symptom from each dropdown menu below. The system will analyze your symptom combination and provide a preliminary health assessment using advanced machine learning algorithms.</p>
+        </div>
+
+        <div id="dropdownStatus" class="dropdown-status loading">
+            🔄 Loading symptom options...
+        </div>
+
+        <form id="predictionForm">
+            <div class="form-section">
+                <h3>🩺 Select Your Symptoms</h3>
+                
+                <div class="symptom-grid" id="symptomInputs">
+                    {% for feature in feature_names %}
+                    <div class="form-group">
+                        <label for="symptom_{{ loop.index0 }}">
+                            {{ feature.replace('_', ' ').title() }}:
+                            <span style="color: #e74c3c;">*</span>
+                        </label>
+                        <select 
+                            id="symptom_{{ loop.index0 }}" 
+                            name="symptom_{{ loop.index0 }}" 
+                            required
+                            class="loading-dropdown"
+                            data-feature-name="{{ feature }}"
+                            data-feature-index="{{ loop.index0 }}"
+                            disabled
+                        >
+                            <option value="">Loading options...</option>
+                        </select>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <button type="submit" class="predict-btn" id="predictBtn" disabled>
+                🔍 Analyze Symptoms & Predict Disease
+            </button>
+        </form>
+
+        <div class="loading" id="loading">
+            <p>🤖 AI is analyzing your symptoms...</p>
+        </div>
+
+        <div id="result" class="result"></div>
+
+        <div class="warning">
+            <strong>⚠️ Important Medical Disclaimer:</strong><br>
+            This AI system provides preliminary predictions based on machine learning analysis and should 
+            <strong>NEVER</strong> be used as a substitute for professional medical advice, diagnosis, or treatment. 
+            Always consult qualified healthcare professionals for accurate medical evaluation. This tool is for 
+            educational and demonstration purposes only. In case of medical emergency, contact emergency services immediately.
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let availableOptions = {};
+        let featuresLoaded = false;
+
+        // Initialize everything when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Page loaded, initializing dropdowns...');
+            loadAvailableOptions();
+        });
+
+        async function loadAvailableOptions() {
+            const statusDiv = document.getElementById('dropdownStatus');
+            const predictBtn = document.getElementById('predictBtn');
+            
+            try {
+                console.log('Loading features from server...');
+                
+                const response = await fetch('/get_features');
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                console.log('Server response:', data);
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                availableOptions = data.features || {};
+                featuresLoaded = true;
+                
+                console.log('Features loaded successfully:', Object.keys(availableOptions).length, 'features');
+                
+                // Update status
+                statusDiv.className = 'dropdown-status loaded';
+                statusDiv.innerHTML = '✅ Symptom options loaded successfully! Please select your symptoms below.';
+                
+                // Populate all dropdowns
+                populateDropdowns();
+                
+                // Enable predict button
+                predictBtn.disabled = false;
+                
+            } catch (error) {
+                console.error('Error loading features:', error);
+                
+                // Update status to show error
+                statusDiv.className = 'dropdown-status error';
+                statusDiv.innerHTML = '❌ Could not load symptom options. Please refresh the page or contact support.';
+                
+                // Show error in dropdowns
+                showDropdownError();
+            }
+        }
+
+        function populateDropdowns() {
+            const selects = document.querySelectorAll('select');
+            
+            selects.forEach((select) => {
+                const featureName = select.getAttribute('data-feature-name');
+                
+                if (!availableOptions[featureName]) {
+                    console.warn(`No options found for feature: ${featureName}`);
+                    select.innerHTML = '<option value="">No options available</option>';
+                    return;
+                }
+                
+                const options = availableOptions[featureName].options || [];
+                
+                // Clear loading state
+                select.innerHTML = '';
+                select.disabled = false;
+                select.classList.remove('loading-dropdown');
+                
+                // Add default option
+                const defaultOption = document.createElement('option');
+                defaultOption.value = '';
+                defaultOption.textContent = `Select ${featureName.replace(/_/g, ' ').toLowerCase()}...`;
+                defaultOption.disabled = true;
+                defaultOption.selected = true;
+                select.appendChild(defaultOption);
+                
+                // Add all available options
+                options.forEach(option => {
+                    const optionElement = document.createElement('option');
+                    optionElement.value = option;
+                    optionElement.textContent = option.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                    select.appendChild(optionElement);
+                });
+                
+                console.log(`Populated ${featureName} with ${options.length} options`);
+            });
+        }
+
+        function showDropdownError() {
+            const selects = document.querySelectorAll('select');
+            
+            selects.forEach((select) => {
+                select.innerHTML = '<option value="">Error loading options</option>';
+                select.disabled = true;
+                select.classList.add('loading-dropdown');
+            });
+        }
+
+        // Form submission handler
+        document.getElementById('predictionForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const loading = document.getElementById('loading');
+            const result = document.getElementById('result');
+            const button = document.getElementById('predictBtn');
+            
+            // Show loading state
+            loading.style.display = 'block';
+            result.style.display = 'none';
+            button.disabled = true;
+            button.textContent = '🤖 Analyzing...';
+            
+            // Collect symptoms
+            const symptoms = [];
+            const selects = document.querySelectorAll('select');
+            let hasEmptyFields = false;
+            
+            selects.forEach(select => {
+                const value = select.value.trim();
+                if (!value) {
+                    hasEmptyFields = true;
+                    select.style.borderColor = '#e74c3c';
+                } else {
+                    select.style.borderColor = '#e0e6ed';
+                    symptoms.push(value);
+                }
+            });
+            
+            if (hasEmptyFields) {
+                loading.style.display = 'none';
+                result.style.display = 'block';
+                result.className = 'result error';
+                result.innerHTML = `
+                    <h3>❌ Incomplete Information</h3>
+                    <p>Please select a symptom from each dropdown menu before proceeding with the analysis.</p>
+                `;
+                button.disabled = false;
+                button.textContent = '🔍 Analyze Symptoms & Predict Disease';
+                return;
+            }
+            
+            try {
+                console.log('Submitting symptoms:', symptoms);
+                
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ symptoms: symptoms })
+                });
+                
+                const data = await response.json();
+                console.log('Prediction response:', data);
+                
+                // Hide loading state
+                loading.style.display = 'none';
+                result.style.display = 'block';
+                button.disabled = false;
+                button.textContent = '🔍 Analyze Symptoms & Predict Disease';
+                
+                if (data.error) {
+                    result.className = 'result error';
+                    let errorContent = `<h3>❌ Analysis Error</h3><p><strong>Issue:</strong> ${data.error}</p>`;
+                    
+                    if (data.suggestions) {
+                        errorContent += `<div style="margin-top: 20px;"><h4>💡 Alternative Options:</h4>`;
+                        Object.keys(data.suggestions).forEach(feature => {
+                            errorContent += `<div style="margin: 10px 0;"><strong>${feature.replace(/_/g, ' ')}:</strong> ${data.suggestions[feature].slice(0, 5).join(', ')}</div>`;
+                        });
+                        errorContent += `</div>`;
+                    }
+                    
+                    if (data.matched_symptoms && data.matched_symptoms.length > 0) {
+                        errorContent += `<div style="margin-top: 15px;"><h4>✅ Successfully Matched:</h4>`;
+                        data.matched_symptoms.forEach(match => {
+                            errorContent += `<div style="margin: 5px 0; color: #2ecc71;">• ${match}</div>`;
+                        });
+                        errorContent += `</div>`;
+                    }
+                    
+                    if (data.note) {
+                        errorContent += `<div style="margin-top: 15px; font-style: italic;">💭 ${data.note}</div>`;
+                    }
+                    
+                    result.innerHTML = errorContent;
+                } else {
+                    result.className = 'result success';
+                    let resultContent = `
+                        <h3>🎯 AI Diagnosis Complete</h3>
+                        <div class="prediction-details">
+                            <div class="detail-item">
+                                <div class="detail-label">Primary Prediction</div>
+                                <div class="detail-value">${data.predicted_disease}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Confidence Level</div>
+                                <div class="detail-value">${data.confidence} (${data.confidence_level || 'Good'})</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Model Accuracy</div>
+                                <div class="detail-value">${data.model_accuracy}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Algorithm Used</div>
+                                <div class="detail-value">${data.model_type || 'ML Model'}</div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    if (data.top_predictions && data.top_predictions.length > 1) {
+                        resultContent += `
+                            <div class="top-predictions">
+                                <h4>📊 Top Predictions (Differential Diagnosis)</h4>
+                        `;
+                        data.top_predictions.forEach((pred, index) => {
+                            const icon = index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉';
+                            resultContent += `
+                                <div class="prediction-item">
+                                    <span>${icon} ${pred.disease}</span>
+                                    <strong>${pred.probability}</strong>
+                                </div>
+                            `;
+                        });
+                        resultContent += `</div>`;
+                    }
+                    
+                    if (data.matched_symptoms && data.matched_symptoms.length > 0) {
+                        resultContent += `
+                            <div style="margin-top: 20px; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 10px;">
+                                <h4>🔍 Selected Symptoms:</h4>
+                        `;
+                        data.matched_symptoms.forEach(match => {
+                            resultContent += `<div style="margin: 5px 0; font-size: 0.9em;">• ${match}</div>`;
+                        });
+                        resultContent += `</div>`;
+                    }
+                    
+                    resultContent += `
+                        <div style="margin-top: 20px; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 10px;">
+                            <small><strong>🏥 Next Steps:</strong> This AI analysis provides a preliminary assessment. 
+                            Please consult a healthcare professional for proper medical evaluation and treatment recommendations.</small>
+                        </div>
+                    `;
+                    
+                    result.innerHTML = resultContent;
+                }
+            } catch (error) {
+                console.error('Prediction error:', error);
+                loading.style.display = 'none';
+                result.style.display = 'block';
+                result.className = 'result error';
+                result.innerHTML = `
+                    <h3>❌ System Error</h3>
+                    <p><strong>Unable to process your request:</strong> ${error.message}</p>
+                    <p>Please try again or contact support if the problem persists.</p>
+                `;
+                button.disabled = false;
+                button.textContent = '🔍 Analyze Symptoms & Predict Disease';
+            }
+        });
+
+        // Test connection on window load
+        window.addEventListener('load', function() {
+            console.log('Window loaded, testing connection...');
+            
+            fetch('/get_features')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Connection test successful:', data);
+                })
+                .catch(error => {
+                    console.error('Connection test failed:', error);
+                });
+        });
+    </script>
+</body>
+</html>
