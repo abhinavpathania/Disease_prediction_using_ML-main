@@ -3,7 +3,6 @@
 ![Python](https://img.shields.io/badge/python-v3.9+-blue.svg)
 ![Flask](https://img.shields.io/badge/flask-v2.3.3-green.svg)
 ![Scikit-learn](https://img.shields.io/badge/scikit--learn-v1.3.0-orange.svg)
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
 
 ## 🚀 Live Demo
 
@@ -13,18 +12,10 @@
 
 ## 📋 Table of Contents
 
-- [Overview](#overview)
-- [Features](#features)
-- [Technology Stack](#technology-stack)
-- [Model Performance](#model-performance)
-- [Installation](#installation)
-- [Usage](#usage)
-- [API Endpoints](#api-endpoints)
-- [Deployment](#deployment)
-- [Project Structure](#project-structure)
-- [Contributing](#contributing)
-- [License](#license)
-- [Disclaimer](#disclaimer)
+- [Overview](##overview)
+- [Features](##features)
+- [Technology Stack](##technology-stack)
+- [Model Performance](##model-performance)
 
 ---
 
