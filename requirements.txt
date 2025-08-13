@@ -2,6 +2,7 @@ Flask
 pandas
 scikit-learn
 numpy
-Werkzeug
-joblib
 gunicorn
+Werkzeug
+Jinja2
+MarkupSafe
